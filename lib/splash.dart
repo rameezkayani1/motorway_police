@@ -1,7 +1,7 @@
 import 'dart:async';
 import 'package:flutter/material.dart';
 import 'package:motorway_police/HomeScreen.dart';
-import 'package:motorway_police/test.dart';
+import 'package:motorway_police/bottombar.dart';
 
 class SplashScreen extends StatefulWidget {
   const SplashScreen({super.key});
@@ -18,52 +18,47 @@ class _SplashScreenState extends State<SplashScreen> {
     Timer(const Duration(seconds: 3), () {
       Navigator.pushReplacement(
         context,
-        MaterialPageRoute(builder: (context) => HomeScreen()),
+        MaterialPageRoute(builder: (context) => MyHomePage()),
       );
     });
   }
 
   @override
   Widget build(BuildContext context) {
-    return Scaffold(
-      body: Container(
-        width: double.infinity,
-        decoration: const BoxDecoration(
-            gradient:
-                LinearGradient(colors: [Color(0xFF1D1B29), Color(0xFF4527A0)])),
-        child: Column(
-          mainAxisAlignment: MainAxisAlignment.center,
-          children: [
-            Container(child: Image.asset("assets/logo.png")),
-            Container(
-              child: Column(
-                children: [
-                  const Text(
-                    "NH&MP",
-                    style: TextStyle(
-                      fontSize: 32.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(
-                        (0xFFFFFFFF),
-                      ),
-                    ),
-                  ),
-                  Text(
-                    "Test Preparation",
-                    style: TextStyle(
-                      fontSize: 32.0,
-                      fontWeight: FontWeight.bold,
-                      color: Color(
-                        (0xFFFFFFFF),
-                      ),
-                    ),
-                  ),
-                ],
-              ),
-            )
-          ],
+    return Container(
+        decoration: BoxDecoration(
+          gradient:
+              LinearGradient(colors: [Color(0xFF0c2d4a), Color(0xFF040D1E)]),
         ),
-      ),
-    );
+        child: Scaffold(
+          body: Container(
+            width: double.infinity,
+            decoration: const BoxDecoration(
+                gradient: LinearGradient(
+                    colors: [Color(0xFF0c2d4a), Color(0xFF040D1E)])),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                Container(child: Image.asset("assets/logo.png")),
+                Container(
+                  child: Column(
+                    children: [
+                      const Text(
+                        "Solo Learner",
+                        style: TextStyle(
+                          fontSize: 32.0,
+                          fontWeight: FontWeight.bold,
+                          color: Color(
+                            (0xFFFFFFFF),
+                          ),
+                        ),
+                      ),
+                    ],
+                  ),
+                )
+              ],
+            ),
+          ),
+        ));
   }
 }
