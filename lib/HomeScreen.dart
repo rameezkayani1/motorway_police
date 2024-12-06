@@ -9,7 +9,7 @@ import 'package:adhan/adhan.dart';
 import 'package:geocoding/geocoding.dart';
 import '../Ads Manager/bannerads.dart';
 import 'Islamic.dart/Qibal/compass.dart';
-import 'Islamic.dart/test.dart';
+import 'QuranPak/AudioQuran.dart';
 import 'QuranPak/QuranPak.dart';
 import 'Widgets/currentlocation.dart';
 

@@ -3,7 +3,7 @@ import 'package:provider/provider.dart';
 
 import 'Islamic.dart/bottom_HomScreen.dart';
 import 'Islamic.dart/Tasbeeh/counter.dart';
-import 'Islamic.dart/test.dart';
+import 'QuranPak/AudioQuran.dart';
 
 void main() {
   runApp(
