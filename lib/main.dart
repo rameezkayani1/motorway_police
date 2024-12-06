@@ -1,8 +1,19 @@
 import 'package:flutter/material.dart';
-import 'package:motorway_police/splash.dart';
+import 'package:provider/provider.dart';
+
+import 'Islamic.dart/bottom_HomScreen.dart';
+import 'Islamic.dart/Tasbeeh/counter.dart';
+import 'Islamic.dart/test.dart';
 
 void main() {
-  runApp(const MyApp());
+  runApp(
+    MultiProvider(
+      providers: [
+        ChangeNotifierProvider(create: (_) => CounterProvider()),
+      ],
+      child: MyApp(),
+    ),
+  );
 }
 
 class MyApp extends StatelessWidget {
@@ -13,12 +24,13 @@ class MyApp extends StatelessWidget {
   Widget build(BuildContext context) {
     return MaterialApp(
       debugShowCheckedModeBanner: false,
-      title: 'Solo Learner',
+      title: 'Salaah',
       theme: ThemeData(
+        iconTheme: IconThemeData(color: Colors.white),
         colorScheme: ColorScheme.fromSeed(seedColor: Colors.deepPurple),
         useMaterial3: true,
       ),
-      home: const SplashScreen(),
+      home: MyHomePage(),
     );
   }
 }
