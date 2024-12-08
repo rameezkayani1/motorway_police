@@ -2,7 +2,6 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:quran/quran.dart' as quran;
 import 'package:audioplayers/audioplayers.dart';
-import 'package:zoom_widget/zoom_widget.dart';
 
 class Mp3Surah extends StatefulWidget {
   final int surahNumber;

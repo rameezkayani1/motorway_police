@@ -4,20 +4,17 @@ import 'package:quran/quran.dart' as quran;
 
 import 'AudioQuran.dart';
 
-class FullQuranView extends StatelessWidget {
+class AllSurahMp3 extends StatefulWidget {
+  const AllSurahMp3({super.key});
+
+  @override
+  State<AllSurahMp3> createState() => _AllSurahMp3State();
+}
+
+class _AllSurahMp3State extends State<AllSurahMp3> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   centerTitle: true,
-      //   title: Text(
-      //     "القرآن الكريم",
-      //     style: TextStyle(
-      //       fontSize: 30,
-      //       fontWeight: FontWeight.bold,
-      //     ),
-      //   ),
-      // ),
       body: ListView.builder(
         padding: const EdgeInsets.all(8.0),
         itemCount: quran.totalSurahCount, // 114 surahs
@@ -25,7 +22,8 @@ class FullQuranView extends StatelessWidget {
           int surahNumber = surahIndex + 1;
           String surahName = quran.getSurahName(surahNumber);
           int totalVerses = quran.getVerseCount(surahNumber);
-
+          String audioofSurah = quran.getAudioURLBySurah(surahNumber);
+          print("Pakistn $audioofSurah");
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 5.0),
             child: Card(
@@ -39,14 +37,16 @@ class FullQuranView extends StatelessWidget {
                   ),
                 ),
                 title: Text(
-                  "$surahName ${quran.getSurahNameArabic(surahNumber)}",
+                  '$audioofSurah',
+
+                  // "$surahName ${quran.getSurahNameArabic(surahNumber)}",
                   style: GoogleFonts.amiriQuran(
                     fontSize: 20,
                     fontWeight: FontWeight.bold,
                   ),
                 ),
                 subtitle: Text(
-                  "Surah ${surahNumber} - ${totalVerses} Ayat",
+                  "Surah $surahName",
                   style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
                 onTap: () {

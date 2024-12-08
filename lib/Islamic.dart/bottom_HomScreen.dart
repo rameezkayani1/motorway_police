@@ -2,7 +2,7 @@ import 'dart:developer';
 import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_notch_bottom_bar.dart';
 import 'package:flutter/material.dart';
 import '../HomeScreen.dart';
-import '../QuranPak/QuranPak.dart';
+import '../QuranPak/MainQuran.dart';
 import 'Tasbeeh/TasbeehScreen.dart';
 
 class MyHomePage extends StatefulWidget {
@@ -34,7 +34,7 @@ class _MyHomePageState extends State<MyHomePage> {
     /// widget list
     final List<Widget> bottomBarPages = [
       const HomeScreen(),
-      FullQuranView(),
+      MainQuranFile(),
       TasbeehCounterScreen(),
 
       // const Page5(),
@@ -51,7 +51,7 @@ class _MyHomePageState extends State<MyHomePage> {
           ? AnimatedNotchBottomBar(
               /// Provide NotchBottomBarController
               notchBottomBarController: _controller,
-              color: Colors.white,
+              color: Colors.transparent,
               showLabel: true,
 
               shadowElevation: 0,
@@ -124,70 +124,5 @@ class _MyHomePageState extends State<MyHomePage> {
             )
           : null,
     );
-  }
-}
-
-/// add controller to check weather index through change or not. in page 1
-class Page1 extends StatelessWidget {
-  final NotchBottomBarController? controller;
-
-  const Page1({Key? key, this.controller}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-      color: Colors.yellow,
-      child: Center(
-        /// adding GestureDetector
-        child: GestureDetector(
-          behavior: HitTestBehavior.translucent,
-          onTap: () {
-            controller?.jumpTo(2);
-          },
-          child: const Text('Page 1'),
-        ),
-      ),
-    );
-  }
-}
-
-class Page2 extends StatelessWidget {
-  const Page2({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Colors.green, child: const Center(child: Text('Page 2')));
-  }
-}
-
-class Page3 extends StatelessWidget {
-  const Page3({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Colors.red, child: const Center(child: Text('Page 3')));
-  }
-}
-
-class Page4 extends StatelessWidget {
-  const Page4({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Colors.blue, child: const Center(child: Text('Page 4')));
-  }
-}
-
-class Page5 extends StatelessWidget {
-  const Page5({Key? key}) : super(key: key);
-
-  @override
-  Widget build(BuildContext context) {
-    return Container(
-        color: Colors.lightGreenAccent,
-        child: const Center(child: Text('Page 5')));
   }
 }

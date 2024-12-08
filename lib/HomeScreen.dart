@@ -8,8 +8,9 @@ import 'package:jhijri/jHijri.dart';
 import 'package:adhan/adhan.dart';
 import 'package:geocoding/geocoding.dart';
 import '../Ads Manager/bannerads.dart';
+import 'QuranPak/MainQuran.dart';
+import 'Audio/TabView.dart';
 import 'Islamic.dart/Qibal/compass.dart';
-import 'QuranPak/AudioQuran.dart';
 import 'QuranPak/QuranPak.dart';
 import 'Widgets/currentlocation.dart';
 
@@ -132,35 +133,17 @@ class _HomeScreenState extends State<HomeScreen> {
 
   @override
   Widget build(BuildContext context) {
-    PrayerTimes prayerTimes = PrayerTimes.today(myCoordinates!, params);
+    PrayerTimes prayerTimes = PrayerTimes.today(myCoordinates, params);
 
     Map<String, String> nextPrayer = _getNextPrayerTimeAndName(prayerTimes);
     return Stack(children: [
       Scaffold(
         backgroundColor: const Color.fromARGB(255, 243, 235, 235),
-        // appBar: AppBar(
-        //   backgroundColor: Colors.transparent,
-        //   centerTitle: true,
-        //   title: Text(
-        //     "صلاح",
-        //     style: TextStyle(fontSize: 35, color: Colors.black),
-        //   ),
-        // ),
         body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
               padding: const EdgeInsets.all(8.0),
               child: Container(
-                decoration: BoxDecoration(
-                    // gradient: LinearGradient(
-                    //   colors: [
-                    //     Colors.teal[300]!,
-                    //     Colors.teal[700]!,
-                    //   ],
-                    //   // begin: Alignment.topLeft,
-                    //   // end: Alignment.bottomRight,
-                    // ),
-                    ),
                 child: Column(
                   // mainAxisAlignment: MainAxisAlignment.center,
                   children: [
@@ -375,15 +358,15 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
+                    // SizedBox(
+                    //   child: AdWidget(
+                    //     ad: AdmobHelper.getBannerAd()..load(),
+                    //     key: UniqueKey(),
+                    //   ),
+                    //   height: 40,
+                    // ),
                     SizedBox(
-                      child: AdWidget(
-                        ad: AdmobHelper.getBannerAd()..load(),
-                        key: UniqueKey(),
-                      ),
-                      height: 40,
-                    ),
-                    SizedBox(
-                      height: 0,
+                      height: 10,
                     ),
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
@@ -393,11 +376,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => Mp3Surah(
-                                        surahNumber: 1,
-                                      )),
-
-                              // builder: (context) => QiblaCompass()),
+                                  builder: (context) => QiblaCompass()),
                             );
                           },
                           child: Container(
@@ -478,7 +457,7 @@ class _HomeScreenState extends State<HomeScreen> {
                             Navigator.push(
                               context,
                               MaterialPageRoute(
-                                  builder: (context) => FullQuranView()),
+                                  builder: (context) => MainQuranFile()),
                             );
                           },
                           child: Container(
@@ -646,7 +625,7 @@ class _HomeScreenState extends State<HomeScreen> {
   }
 
   void _showPrayerTimesModal(BuildContext context) {
-    final prayerTimes = PrayerTimes.today(myCoordinates!, params);
+    final prayerTimes = PrayerTimes.today(myCoordinates, params);
 
     showModalBottomSheet(
       context: context,
