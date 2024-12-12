@@ -5,21 +5,33 @@ import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
 import 'package:path_provider/path_provider.dart';
 import 'dart:io'; // To check for file existence
+import 'package:connectivity_plus/connectivity_plus.dart'; // For checking network connectivity
+import 'package:shared_preferences/shared_preferences.dart'; // To store download state
 
-class AllSurahMp3 extends StatefulWidget {
-  const AllSurahMp3({super.key});
+class TestMp3 extends StatefulWidget {
+  const TestMp3({super.key});
 
   @override
-  State<AllSurahMp3> createState() => _AllSurahMp3State();
+  State<TestMp3> createState() => _TestMp3State();
 }
 
-class _AllSurahMp3State extends State<AllSurahMp3> {
+class _TestMp3State extends State<TestMp3> {
   final AudioPlayer _audioPlayer = AudioPlayer();
   final Dio _dio = Dio();
   bool isDownloading = false;
   double downloadProgress = 0.0;
   String? downloadedFilePath;
   bool isPlaying = false;
+  bool isFileDownloaded = false;
+
+  // Check if file is downloaded using SharedPreferences
+  Future<void> checkDownloadedState(String fileName) async {
+    final prefs = await SharedPreferences.getInstance();
+    final isDownloaded = prefs.getBool(fileName) ?? false;
+    setState(() {
+      isFileDownloaded = isDownloaded;
+    });
+  }
 
   // Function to download MP3
   Future<void> downloadMp3(String url, String fileName) async {
@@ -46,9 +58,14 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
         },
       );
 
+      // Save download status to SharedPreferences
+      final prefs = await SharedPreferences.getInstance();
+      prefs.setBool(fileName, true);
+
       setState(() {
         isDownloading = false;
         downloadedFilePath = filePath;
+        isFileDownloaded = true;
       });
 
       ScaffoldMessenger.of(context).showSnackBar(
@@ -62,14 +79,6 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
         SnackBar(content: Text('Error downloading file: $e')),
       );
     }
-  }
-
-  // Function to check if the file is already downloaded
-  Future<bool> isFileDownloaded(String fileName) async {
-    final directory = await getApplicationDocumentsDirectory();
-    final filePath = '${directory.path}/$fileName';
-    final file = File(filePath);
-    return file.exists(); // Check if the file exists
   }
 
   // Function to play the downloaded MP3
@@ -121,6 +130,21 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
     }
   }
 
+  // Function to check internet connection
+  Future<bool> checkInternetConnection() async {
+    var connectivityResult = await Connectivity().checkConnectivity();
+    return connectivityResult !=
+        ConnectivityResult.none; // Return true if connected
+  }
+
+  @override
+  void initState() {
+    super.initState();
+    // Load download state when the app starts
+    checkDownloadedState(
+        'surah_1.mp3'); // For example, checking for Surah 1 file
+  }
+
   @override
   void dispose() {
     _audioPlayer.dispose();
@@ -155,51 +179,62 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
                 ),
                 trailing: isDownloading
                     ? CircularProgressIndicator(value: downloadProgress)
-                    : FutureBuilder<bool>(
-                        future:
-                            isFileDownloaded(fileName), // Check if file exists
-                        builder: (context, snapshot) {
-                          if (snapshot.connectionState ==
-                              ConnectionState.waiting) {
-                            return CircularProgressIndicator();
-                          }
+                    : isFileDownloaded
+                        ? Row(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              IconButton(
+                                icon: Icon(
+                                  isPlaying ? Icons.pause : Icons.play_arrow,
+                                  color: Colors.blueAccent,
+                                ),
+                                onPressed:
+                                    isPlaying ? pauseAudio : playDownloadedMp3,
+                              ),
+                              // IconButton(
+                              //   icon: Icon(
+                              //     Icons.stop,
+                              //     color: Colors.red,
+                              //   ),
+                              //   onPressed: stopAudio,
+                              // ),
+                            ],
+                          )
+                        : FutureBuilder<bool>(
+                            future: checkInternetConnection(),
+                            builder: (context, connectionSnapshot) {
+                              if (connectionSnapshot.connectionState ==
+                                  ConnectionState.waiting) {
+                                return CircularProgressIndicator();
+                              }
 
-                          if (snapshot.hasData && snapshot.data == true) {
-                            // If file is already downloaded
-                            return Row(
-                              mainAxisSize: MainAxisSize.min,
-                              children: [
-                                IconButton(
+                              if (connectionSnapshot.hasData &&
+                                  connectionSnapshot.data == true) {
+                                return IconButton(
                                   icon: Icon(
-                                    isPlaying ? Icons.pause : Icons.play_arrow,
+                                    Icons.download_outlined,
                                     color: Colors.blueAccent,
                                   ),
-                                  onPressed: isPlaying
-                                      ? pauseAudio
-                                      : playDownloadedMp3,
-                                ),
-                                IconButton(
+                                  onPressed: () =>
+                                      downloadMp3(audioOfSurah, fileName),
+                                );
+                              } else {
+                                return IconButton(
                                   icon: Icon(
-                                    Icons.stop,
-                                    color: Colors.red,
+                                    Icons.cloud_off,
+                                    color: Colors.grey,
                                   ),
-                                  onPressed: stopAudio,
-                                ),
-                              ],
-                            );
-                          } else {
-                            // If file is not downloaded
-                            return IconButton(
-                              icon: Icon(
-                                Icons.download_outlined,
-                                color: Colors.blueAccent,
-                              ),
-                              onPressed: () =>
-                                  downloadMp3(audioOfSurah, fileName),
-                            );
-                          }
-                        },
-                      ),
+                                  onPressed: () {
+                                    ScaffoldMessenger.of(context).showSnackBar(
+                                      SnackBar(
+                                          content:
+                                              Text('No internet connection!')),
+                                    );
+                                  },
+                                );
+                              }
+                            },
+                          ),
                 title: Text(
                   '$surahName (${quran.getSurahNameArabic(surahNumber)})',
                   style: GoogleFonts.amiriQuran(

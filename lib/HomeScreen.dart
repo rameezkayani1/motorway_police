@@ -48,7 +48,7 @@ class _HomeScreenState extends State<HomeScreen> {
       await _getLocationName(latitude!, longitude!);
     } catch (e) {
       setState(() {
-        _locationMessage = "unkown";
+        _locationMessage = "Updating...";
       });
     }
   }
@@ -60,7 +60,7 @@ class _HomeScreenState extends State<HomeScreen> {
           await GeocodingPlatform.instance!.placemarkFromCoordinates(lat, lon);
 
       if (placemarks.isNotEmpty) {
-        String city = 'unknown';
+        String city = 'Updating...';
         for (var place in placemarks) {
           if (place.locality != null && place.locality!.isNotEmpty) {
             city = place.locality!;
@@ -74,12 +74,12 @@ class _HomeScreenState extends State<HomeScreen> {
         });
       } else {
         setState(() {
-          _locationMessage = "Location not found.";
+          _locationMessage = "Updating....";
         });
       }
     } catch (e) {
       setState(() {
-        _locationMessage = "Error fetching city: $e";
+        _locationMessage = "Updating...";
       });
     }
   }

@@ -4,6 +4,8 @@ import 'package:flutter/material.dart';
 import '../Audio/TabView.dart';
 import 'Allmp3Surah.dart';
 import 'QuranPak.dart';
+import 'DownloaderMP3.dart';
+import 'videodownloader.dart';
 
 class MainQuranFile extends StatefulWidget {
   const MainQuranFile({Key? key}) : super(key: key);
@@ -92,8 +94,9 @@ class _MainQuranFileState extends State<MainQuranFile> {
                   physics: const BouncingScrollPhysics(),
                   children: [
                     FullQuranView(),
-                    const AllSurahMp3(),
-                    AllSurahMp322(),
+                    DownloadAndPlayAudio(),
+                    TestMp3(),
+                    // AllSurahMp322(),
                   ],
                 ),
               ),

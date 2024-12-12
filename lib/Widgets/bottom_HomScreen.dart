@@ -3,7 +3,7 @@ import 'package:animated_notch_bottom_bar/animated_notch_bottom_bar/animated_not
 import 'package:flutter/material.dart';
 import '../HomeScreen.dart';
 import '../QuranPak/MainQuran.dart';
-import 'Tasbeeh/TasbeehScreen.dart';
+import '../Islamic.dart/Tasbeeh/TasbeehScreen.dart';
 
 class MyHomePage extends StatefulWidget {
   const MyHomePage({Key? key}) : super(key: key);

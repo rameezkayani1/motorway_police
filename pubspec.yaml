@@ -57,6 +57,11 @@ dependencies:
   just_audio: ^0.9.42
   animated_segmented_tab_control: ^2.0.0
   dio: ^5.7.0
+  path_provider: ^2.1.5
+  connectivity_plus: ^6.1.0
+  shared_preferences: ^2.3.3
+  hive_flutter: ^1.1.0
+  pod_player: ^0.2.2
 
 dev_dependencies:
   flutter_test:
