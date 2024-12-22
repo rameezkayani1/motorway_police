@@ -11,7 +11,6 @@ import '../Ads Manager/bannerads.dart';
 import 'QuranPak/MainQuran.dart';
 import 'Audio/TabView.dart';
 import 'Islamic.dart/Qibal/compass.dart';
-import 'QuranPak/QuranPak.dart';
 import 'Widgets/currentlocation.dart';
 
 class HomeScreen extends StatefulWidget {

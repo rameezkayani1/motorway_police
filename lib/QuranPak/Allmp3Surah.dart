@@ -32,6 +32,7 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
       // Get the app's document directory
       final directory = await getApplicationDocumentsDirectory();
       final filePath = '${directory.path}/$fileName';
+      print("Location :  $filePath");
 
       // Download the file
       await _dio.download(
@@ -177,13 +178,6 @@ class _AllSurahMp3State extends State<AllSurahMp3> {
                                   onPressed: isPlaying
                                       ? pauseAudio
                                       : playDownloadedMp3,
-                                ),
-                                IconButton(
-                                  icon: Icon(
-                                    Icons.stop,
-                                    color: Colors.red,
-                                  ),
-                                  onPressed: stopAudio,
                                 ),
                               ],
                             );

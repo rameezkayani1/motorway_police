@@ -1,107 +1,138 @@
-import 'dart:io';
 import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:quran/quran.dart' as quran;
 import 'package:audioplayers/audioplayers.dart';
 import 'package:dio/dio.dart';
+import 'dart:io';
 import 'package:path_provider/path_provider.dart';
-import 'package:hive/hive.dart';
-import 'package:hive_flutter/hive_flutter.dart';
 
-class DownloadAndPlayAudio extends StatefulWidget {
-  const DownloadAndPlayAudio({Key? key}) : super(key: key);
+class AllSurahMp3Scoped extends StatefulWidget {
+  const AllSurahMp3Scoped({super.key});
 
   @override
-  State<DownloadAndPlayAudio> createState() => _DownloadAndPlayAudioState();
+  State<AllSurahMp3Scoped> createState() => _AllSurahMp3ScopedState();
 }
 
-class _DownloadAndPlayAudioState extends State<DownloadAndPlayAudio> {
-  late final Dio dio;
-  double _progress = 0.0;
-  String? _audioFilePath;
-  late final AudioPlayer _audioPlayer;
-  bool _isPlaying = false;
+class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
+  final AudioPlayer _audioPlayer = AudioPlayer();
+  final Dio _dio = Dio();
+  bool isDownloading = false;
+  double downloadProgress = 0.0;
+  String? downloadedFilePath;
+  bool isPlaying = false;
 
-  @override
-  void initState() {
-    super.initState();
-    _audioPlayer = AudioPlayer();
+  // Get a public folder path for Scoped Storage (Android 10+ compatible)
+  Future<String> getScopedStoragePath(String fileName) async {
+    final directory = await getExternalStorageDirectory();
+    final scopedPath =
+        '${directory?.path ?? '/storage/emulated/0/Download'}/QuranMp3';
+    print("scope Path : $scopedPath");
+    // Create directory if it doesn't exist
+    final dir = Directory(scopedPath);
+    if (!dir.existsSync()) {
+      dir.createSync(recursive: true);
+    }
 
-    dio = Dio();
+    return '$scopedPath/$fileName';
   }
 
-  Future<void> _downloadAndSaveAudio() async {
-    String url =
-        'https://cdn.islamic.network/quran/audio-surah/128/ar.alafasy/1.mp3';
-
+  // Function to download MP3
+  Future<void> downloadMp3(String url, String fileName) async {
     try {
-      Directory appDocDir = await getApplicationDocumentsDirectory();
-      String savePath = appDocDir.path + '/audio.mp3';
+      setState(() {
+        isDownloading = true;
+        downloadProgress = 0.0;
+      });
 
-      await dio.download(
+      // Get file path
+      final filePath = await getScopedStoragePath(fileName);
+      print("Downloading to: $filePath");
+
+      // Download the file
+      await _dio.download(
         url,
-        savePath,
+        filePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
-            double progress = (received / total * 100);
             setState(() {
-              _progress = progress;
+              downloadProgress = received / total;
             });
           }
         },
       );
 
       setState(() {
-        _audioFilePath = savePath;
+        isDownloading = false;
+        downloadedFilePath = filePath;
       });
 
-      final box = await Hive.openBox<String>('audio');
-      box.put('audio_path', savePath);
-
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Audio downloaded and saved successfully'),
-        ),
+        SnackBar(content: Text('Download completed! File saved at $filePath')),
       );
     } catch (e) {
-      print('Error downloading file: $e');
+      setState(() {
+        isDownloading = false;
+      });
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Error downloading and saving audio'),
-        ),
+        SnackBar(content: Text('Error downloading file: $e')),
       );
     }
   }
 
-  Future<void> _playAudioFromHive() async {
-    final box = await Hive.openBox<String>('audio');
-    String? audioPath = box.get('audio_path');
+  // Check if file exists
+  Future<bool> isFileDownloaded(String fileName) async {
+    final filePath = await getScopedStoragePath(fileName);
+    final file = File(filePath);
+    return file.existsSync();
+  }
 
-    if (audioPath != null) {
-      // Navigator.push(
-      //   context,
-      //   MaterialPageRoute(
-      //     builder: (context) => AudioPlayerScreen(audioFilePath: audioPath),
-      //   ),
-      // );
-    } else {
+  // Play the downloaded MP3
+  Future<void> playDownloadedMp3() async {
+    if (downloadedFilePath == null) {
       ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(
-          content: Text('Audio not found in Hive database'),
-        ),
+        SnackBar(content: Text('No file downloaded to play!')),
+      );
+      return;
+    }
+
+    try {
+      await _audioPlayer.play(DeviceFileSource(downloadedFilePath!));
+      setState(() {
+        isPlaying = true;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error playing audio: $e')),
       );
     }
   }
 
-  Future<void> _togglePlayback() async {
-    if (_isPlaying) {
+  // Pause audio
+  Future<void> pauseAudio() async {
+    try {
       await _audioPlayer.pause();
-    } else {
-      await _audioPlayer.play(DeviceFileSource(_audioFilePath!));
+      setState(() {
+        isPlaying = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error pausing audio: $e')),
+      );
     }
-    setState(() {
-      _isPlaying = !_isPlaying;
-    });
+  }
+
+  // Stop audio
+  Future<void> stopAudio() async {
+    try {
+      await _audioPlayer.stop();
+      setState(() {
+        isPlaying = false;
+      });
+    } catch (e) {
+      ScaffoldMessenger.of(context).showSnackBar(
+        SnackBar(content: Text('Error stopping audio: $e')),
+      );
+    }
   }
 
   @override
@@ -113,19 +144,15 @@ class _DownloadAndPlayAudioState extends State<DownloadAndPlayAudio> {
   @override
   Widget build(BuildContext context) {
     return Scaffold(
-      // appBar: AppBar(
-      //   title: Text('Download and Play Audio'),
-      // ),
       body: ListView.builder(
         padding: const EdgeInsets.all(8.0),
-        itemCount: quran.totalSurahCount, // 114 surahs
+        itemCount: quran.totalSurahCount,
         itemBuilder: (context, surahIndex) {
           int surahNumber = surahIndex + 1;
           String surahName = quran.getSurahName(surahNumber);
           int totalVerses = quran.getVerseCount(surahNumber);
-          String audioOfSurah =
-              quran.getAudioURLBySurah(surahNumber); // Dynamic audio URL
-          String fileName = 'surah_${surahNumber}.mp3'; // Define file name
+          String audioOfSurah = quran.getAudioURLBySurah(surahNumber);
+          String fileName = 'surah_${surahNumber}.mp3';
 
           return Padding(
             padding: const EdgeInsets.symmetric(vertical: 5.0),
@@ -139,6 +166,43 @@ class _DownloadAndPlayAudioState extends State<DownloadAndPlayAudio> {
                     style: const TextStyle(color: Colors.white),
                   ),
                 ),
+                trailing: isDownloading
+                    ? CircularProgressIndicator(value: downloadProgress)
+                    : FutureBuilder<bool>(
+                        future: isFileDownloaded(fileName),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          }
+
+                          if (snapshot.hasData && snapshot.data == true) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    isPlaying ? Icons.pause : Icons.play_arrow,
+                                    color: Colors.blueAccent,
+                                  ),
+                                  onPressed: isPlaying
+                                      ? pauseAudio
+                                      : playDownloadedMp3,
+                                ),
+                              ],
+                            );
+                          } else {
+                            return IconButton(
+                              icon: Icon(
+                                Icons.download_outlined,
+                                color: Colors.blueAccent,
+                              ),
+                              onPressed: () =>
+                                  downloadMp3(audioOfSurah, fileName),
+                            );
+                          }
+                        },
+                      ),
                 title: Text(
                   '$surahName (${quran.getSurahNameArabic(surahNumber)})',
                   style: GoogleFonts.amiriQuran(
@@ -150,134 +214,11 @@ class _DownloadAndPlayAudioState extends State<DownloadAndPlayAudio> {
                   "Surah $surahName ($totalVerses Verses)",
                   style: const TextStyle(fontSize: 14, color: Colors.grey),
                 ),
-                trailing: Row(mainAxisSize: MainAxisSize.min, children: [
-                  IconButton(
-                    icon: Icon(
-                      _isPlaying ? Icons.pause : Icons.play_arrow,
-                      color: Colors.blueAccent,
-                    ),
-                    onPressed: _togglePlayback,
-                  ),
-                  IconButton(
-                    icon: Icon(
-                      Icons.download,
-                      color: Colors.blueAccent,
-                    ),
-                    onPressed: _downloadAndSaveAudio,
-                  ),
-                ]),
               ),
             ),
           );
         },
       ),
-      // Center(
-      //   child: Column(
-      //     mainAxisAlignment: MainAxisAlignment.center,
-      //     children: [
-      //       if (_progress > 0 && _progress < 100)
-      //         LinearProgressIndicator(
-      //           value: _progress / 100,
-      //           backgroundColor: Colors.grey[300],
-      //           valueColor: AlwaysStoppedAnimation<Color>(Colors.blue),
-      //         ),
-      //       SizedBox(height: 20),
-      //       ElevatedButton(
-      //         onPressed: _downloadAndSaveAudio,
-      //         child: Text("Download and Save Audio"),
-      //       ),
-      //       ElevatedButton(
-      //         onPressed: _playAudioFromHive,
-      //         child: Text("Play Audio from Hive"),
-      //       ),
-      //     ],
-      //   ),
-      // ),
     );
   }
 }
-
-// class AudioPlayerScreen extends StatefulWidget {
-//   final String audioFilePath;
-
-//   const AudioPlayerScreen({Key? key, required this.audioFilePath})
-//       : super(key: key);
-
-//   @override
-//   _AudioPlayerScreenState createState() => _AudioPlayerScreenState();
-// }
-
-// class _AudioPlayerScreenState extends State<AudioPlayerScreen> {
-
-
- 
-
-
-//   @override
-//   Widget build(BuildContext context) {
-//     return Scaffold(
-//       appBar: AppBar(
-//         title: Text('Audio Player'),
-//       ),
-//       body: Center(
-//         child: Column(
-//           mainAxisAlignment: MainAxisAlignment.center,
-//           children: [
-//             ListView.builder(
-//               padding: const EdgeInsets.all(8.0),
-//               itemCount: quran.totalSurahCount, // 114 surahs
-//               itemBuilder: (context, surahIndex) {
-//                 int surahNumber = surahIndex + 1;
-//                 String surahName = quran.getSurahName(surahNumber);
-//                 int totalVerses = quran.getVerseCount(surahNumber);
-//                 String audioOfSurah =
-//                     quran.getAudioURLBySurah(surahNumber); // Dynamic audio URL
-//                 String fileName =
-//                     'surah_${surahNumber}.mp3'; // Define file name
-
-//                 return Padding(
-//                   padding: const EdgeInsets.symmetric(vertical: 5.0),
-//                   child: Card(
-//                     elevation: 5,
-//                     child: ListTile(
-//                       leading: CircleAvatar(
-//                         backgroundColor: Colors.teal,
-//                         child: Text(
-//                           '$surahNumber',
-//                           style: const TextStyle(color: Colors.white),
-//                         ),
-//                       ),
-//                       title: Text(
-//                         '$surahName (${quran.getSurahNameArabic(surahNumber)})',
-//                         style: GoogleFonts.amiriQuran(
-//                           fontSize: 20,
-//                           fontWeight: FontWeight.bold,
-//                         ),
-//                       ),
-//                       subtitle: Text(
-//                         "Surah $surahName ($totalVerses Verses)",
-//                         style:
-//                             const TextStyle(fontSize: 14, color: Colors.grey),
-//                       ),
-//                       trailing: IconButton(
-//                         icon: Icon(
-//                           _isPlaying ? Icons.pause : Icons.play_arrow,
-//                           color: Colors.blueAccent,
-//                         ),
-//                         onPressed: _togglePlayback,
-//                       ),
-//                     ),
-//                   ),
-//                 );
-//               },
-//             ),
-//             ElevatedButton(
-//               onPressed: _togglePlayback,
-//               child: Text(_isPlaying ? 'Pause Audio' : 'Play Audio'),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
-// }
