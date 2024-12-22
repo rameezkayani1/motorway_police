@@ -136,8 +136,23 @@ class _HomeScreenState extends State<HomeScreen> {
 
     Map<String, String> nextPrayer = _getNextPrayerTimeAndName(prayerTimes);
     return Stack(children: [
+      Container(
+          // color: const Color.fromARGB(255, 243, 235, 235),
+
+          //     decoration: BoxDecoration(
+          //   gradient: LinearGradient(
+          //     colors: [
+          //       Color(0xff282f39),
+          //          Color(0xff282f39),
+          //     ]
+          //     ,
+          //     // begin: Alignment.topLeft,
+          //     // end: Alignment.bottomRight,
+          //   ),
+          // )
+          ),
       Scaffold(
-        backgroundColor: const Color.fromARGB(255, 243, 235, 235),
+        backgroundColor: Colors.transparent,
         body: SafeArea(
           child: SingleChildScrollView(
             child: Padding(
@@ -295,14 +310,30 @@ class _HomeScreenState extends State<HomeScreen> {
                       decoration: BoxDecoration(
                         gradient: LinearGradient(
                           colors: [
-                            const Color.fromARGB(255, 14, 140, 243),
-                            const Color.fromARGB(255, 15, 224, 22)
+                            Colors.teal[300]!,
+                            Colors.teal[700]!,
                           ],
-                          begin: Alignment.topLeft,
-                          end: Alignment.bottomRight,
-                        ), // color: Colors.transparent,
-                        borderRadius: BorderRadius.circular(
-                            15), // Adjust the radius as needed
+                          // begin: Alignment.topLeft,
+                          // end: Alignment.bottomRight,
+                        ),
+                        image: DecorationImage(
+                          image: AssetImage(
+                              'assets/sak.PNG'), // Path to your image asset
+                          fit: BoxFit.cover,
+                          colorFilter: ColorFilter.mode(
+                            Colors.black.withOpacity(0.2),
+                            BlendMode.darken,
+                          ),
+                        ),
+                        borderRadius: BorderRadius.circular(15),
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            spreadRadius: 4,
+                            blurRadius: 10,
+                            offset: Offset(0, 4),
+                          ),
+                        ],
                       ),
 
                       child: Row(
@@ -367,6 +398,136 @@ class _HomeScreenState extends State<HomeScreen> {
                     SizedBox(
                       height: 10,
                     ),
+                    buildPrayerTimesRow(context),
+
+                    Padding(
+                      padding: const EdgeInsets.all(8.0),
+                      child: Row(
+                        mainAxisAlignment: MainAxisAlignment.spaceBetween,
+                        children: [
+                          Container(
+                            child: Text(
+                              "Feature",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                          Container(
+                            child: Text(
+                              "View all",
+                              style: TextStyle(
+                                  fontSize: 18, fontWeight: FontWeight.bold),
+                            ),
+                          ),
+                        ],
+                      ),
+                    ),
+                    Row(
+                      children: [
+                        Container(
+                          width: 100, // Set the width for each container
+                          padding: EdgeInsets.all(8),
+                          margin: EdgeInsets.symmetric(horizontal: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.mosque_outlined,
+                                color: Colors.black,
+                                size: 30,
+                              ),
+                              Text(
+                                "Qibal",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 100, // Set the width for each container
+                          padding: EdgeInsets.all(8),
+                          margin: EdgeInsets.symmetric(horizontal: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.menu_book_outlined,
+                                color: Colors.black,
+                                size: 30,
+                              ),
+                              Text(
+                                "Quran",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                        Container(
+                          width: 100, // Set the width for each container
+                          padding: EdgeInsets.all(8),
+                          margin: EdgeInsets.symmetric(horizontal: 5),
+                          decoration: BoxDecoration(
+                            color: Colors.white,
+                            borderRadius: BorderRadius.circular(25.0),
+                            border: Border.all(
+                              color: Colors.grey,
+                              width: 2,
+                            ),
+                          ),
+                          child: Column(
+                            mainAxisSize: MainAxisSize.min,
+                            children: [
+                              Icon(
+                                Icons.add_circle_outline,
+                                color: Colors.black,
+                                size: 30,
+                              ),
+                              Text(
+                                "Tasbeeh",
+                                style: TextStyle(
+                                  fontWeight: FontWeight.bold,
+                                  color: Colors.black,
+                                ),
+                              ),
+                            ],
+                          ),
+                        ),
+                      ],
+                    ),
+                    Column(
+                      mainAxisAlignment: MainAxisAlignment.start,
+                      children: [
+                        Container(
+                            child: Text(
+                          "Our Services",
+                          style: TextStyle(
+                              fontSize: 25, fontWeight: FontWeight.bold),
+                        )),
+                      ],
+                    ),
+
                     Row(
                       mainAxisAlignment: MainAxisAlignment.spaceAround,
                       children: [
@@ -379,15 +540,17 @@ class _HomeScreenState extends State<HomeScreen> {
                             );
                           },
                           child: Container(
-                            // color: Colors.transparent,
-                            height: 100,
+                            height: 120, // Set a height
+                            width:
+                                120, // Make width the same as height for a perfect circle
                             decoration: BoxDecoration(
                               gradient: LinearGradient(
                                 colors: [Colors.green[200]!, Colors.blue[400]!],
                                 begin: Alignment.topLeft,
                                 end: Alignment.bottomRight,
                               ),
-                              borderRadius: BorderRadius.circular(20),
+                              shape: BoxShape
+                                  .circle, // Make the container circular
                               boxShadow: [
                                 BoxShadow(
                                   color: Colors.grey.withOpacity(0.5),
@@ -401,31 +564,34 @@ class _HomeScreenState extends State<HomeScreen> {
                               alignment: Alignment.center,
                               children: [
                                 Container(
-                                  // height: 100,
-                                  width: 100,
+                                  height:
+                                      80, // Adjust the size of the inner circle if needed
+                                  width: 80,
                                   decoration: BoxDecoration(
                                     shape: BoxShape.circle,
                                     boxShadow: [
-                                      // BoxShadow(
-                                      //   color: Colors.black.withOpacity(0.3),
-                                      //   spreadRadius: 2,
-                                      //   blurRadius: 8,
-                                      //   offset: Offset(0, 4),
-                                      // ),
+                                      BoxShadow(
+                                        color: Colors.black.withOpacity(0.3),
+                                        spreadRadius: 2,
+                                        blurRadius: 8,
+                                        offset: Offset(0, 4),
+                                      ),
                                     ],
                                   ),
                                   child: ClipOval(
-                                      child: Icon(
-                                    Icons.location_on,
-                                    size: 50,
-                                  )),
+                                    child: Icon(
+                                      Icons.location_on,
+                                      size:
+                                          50, // Adjust icon size to fit the inner circle
+                                      color: Colors.white,
+                                    ),
+                                  ),
                                 ),
                                 Positioned(
-                                  bottom: 0,
-                                  right: 0,
+                                  bottom: 5, // Adjust position of text
                                   child: Container(
                                     padding: EdgeInsets.symmetric(
-                                        horizontal: 25, vertical: 5),
+                                        horizontal: 15, vertical: 5),
                                     decoration: BoxDecoration(
                                       color: Colors.transparent,
                                       borderRadius: BorderRadius.circular(10),
@@ -433,7 +599,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                     child: Text(
                                       'Qibla',
                                       style: TextStyle(
-                                        fontSize: 18,
+                                        fontSize: 16, // Adjust font size
                                         color: Colors.white,
                                         fontWeight: FontWeight.bold,
                                         shadows: [
@@ -536,7 +702,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         InkWell(
                           onTap: () {
-                            _showPrayerTimesModal(context);
+                            // _showPrayerTimesModal(context);
                           },
                           child: Container(
                             // color: Colors.transparent,
@@ -613,6 +779,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                       ],
                     ),
+                    Container()
                   ],
                 ),
               ),
@@ -623,52 +790,80 @@ class _HomeScreenState extends State<HomeScreen> {
     ]);
   }
 
-  void _showPrayerTimesModal(BuildContext context) {
+  Widget buildPrayerTimesRow(BuildContext context) {
     final prayerTimes = PrayerTimes.today(myCoordinates, params);
+    final nextPrayer =
+        _getNextPrayerTimeAndName(prayerTimes); // Get the next prayer details
 
-    showModalBottomSheet(
-      context: context,
-      builder: (context) {
-        final screenHeight = MediaQuery.of(context).size.height;
-        final screenWidth = MediaQuery.of(context).size.width;
-        return Padding(
-          padding: EdgeInsets.all(screenWidth * 0.02),
-          child: Column(
-            mainAxisSize: MainAxisSize.min,
-            crossAxisAlignment: CrossAxisAlignment.start,
-            children: [
-              // Center(
-              //   child: Text(
-              //     '--- Today\'s Prayer Times ---',
-              //     style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
-              //   ),
-              // ),
-              // SizedBox(height: screenHeight * 0.01),
-              _buildPrayerTimeTile('Fajr', prayerTimes.fajr),
-              _buildPrayerTimeTile('Sunrise', prayerTimes.sunrise),
-              _buildPrayerTimeTile('Dhuhr', prayerTimes.dhuhr),
-              _buildPrayerTimeTile('Asr', prayerTimes.asr),
-              _buildPrayerTimeTile('Maghrib', prayerTimes.maghrib),
-              _buildPrayerTimeTile('Isha', prayerTimes.isha),
-            ],
-          ),
-        );
-      },
+    return Padding(
+      padding: const EdgeInsets.all(0.0),
+      child: SingleChildScrollView(
+        scrollDirection: Axis.horizontal, // Allow horizontal scrolling
+        child: Row(
+          mainAxisAlignment: MainAxisAlignment.spaceEvenly,
+          children: [
+            _buildPrayerTimeTile(
+                'Fajr', prayerTimes.fajr, nextPrayer['name'] == 'Fajr'),
+            _buildPrayerTimeTile('Sunrise', prayerTimes.sunrise,
+                nextPrayer['name'] == 'Sunrise'),
+            _buildPrayerTimeTile(
+                'Dhuhr', prayerTimes.dhuhr, nextPrayer['name'] == 'Dhuhr'),
+            _buildPrayerTimeTile(
+                'Asr', prayerTimes.asr, nextPrayer['name'] == 'Asr'),
+            _buildPrayerTimeTile('Maghrib', prayerTimes.maghrib,
+                nextPrayer['name'] == 'Maghrib'),
+            _buildPrayerTimeTile(
+                'Isha', prayerTimes.isha, nextPrayer['name'] == 'Isha'),
+          ],
+        ),
+      ),
     );
   }
 
-  Widget _buildPrayerTimeTile(String name, DateTime time) {
-    return Card(
-      elevation: 5.0,
-      child: ListTile(
-        title: Text(
-          name,
-          style: TextStyle(fontSize: 18, fontWeight: FontWeight.w500),
+  Widget _buildPrayerTimeTile(
+      String prayerName, DateTime prayerTime, bool isNextPrayer) {
+    return Container(
+      padding: EdgeInsets.all(8),
+      margin: EdgeInsets.symmetric(horizontal: 5),
+      decoration: BoxDecoration(
+        color:
+            isNextPrayer ? Colors.blue : Colors.white, // Highlight next prayer
+        borderRadius: BorderRadius.circular(10.0),
+        border: Border.all(
+          color: isNextPrayer
+              ? Colors.blue
+              : Colors.grey, // Border color for next prayer
+          width: 2,
         ),
-        trailing: Text(
-          DateFormat.jm().format(time),
-          style: TextStyle(fontSize: 18, color: Colors.black54),
-        ),
+      ),
+      child: Column(
+        mainAxisSize: MainAxisSize.min,
+        children: [
+          Icon(
+            isNextPrayer ? Icons.circle : Icons.circle_outlined,
+            color: isNextPrayer
+                ? Colors.amber
+                : Colors.black, // Change icon color for next prayer
+            size: 15,
+          ),
+          Text(
+            prayerName,
+            style: TextStyle(
+              fontWeight: FontWeight.bold,
+              color: isNextPrayer
+                  ? Colors.white
+                  : Colors.black, // Text color for next prayer
+            ),
+          ),
+          Text(
+            DateFormat.jm().format(prayerTime),
+            style: TextStyle(
+              color: isNextPrayer
+                  ? Colors.white
+                  : Colors.grey, // Time color for next prayer
+            ),
+          ),
+        ],
       ),
     );
   }
