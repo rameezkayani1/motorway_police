@@ -1,61 +1,42 @@
-import 'package:flutter/material.dart';
-import 'package:google_fonts/google_fonts.dart';
-import 'package:quran/quran.dart' as quran;
-import 'package:audioplayers/audioplayers.dart';
-import 'package:dio/dio.dart';
 import 'dart:io';
-import 'package:path_provider/path_provider.dart';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:quran/quran.dart' as quran;
 
-class AllSurahMp3Scoped extends StatefulWidget {
-  const AllSurahMp3Scoped({super.key});
-
+class OfflineSurahs extends StatefulWidget {
   @override
-  State<AllSurahMp3Scoped> createState() => _AllSurahMp3ScopedState();
+  _OfflineSurahsState createState() => _OfflineSurahsState();
 }
 
-class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
-  final AudioPlayer _audioPlayer = AudioPlayer();
-  final Dio _dio = Dio();
+class _OfflineSurahsState extends State<OfflineSurahs> {
   bool isDownloading = false;
   double downloadProgress = 0.0;
-  String? downloadedFilePath;
   bool isPlaying = false;
+  AudioPlayer audioPlayer = AudioPlayer();
 
-  // Get a public folder path for Scoped Storage (Android 10+ compatible)
-  Future<String> getScopedStoragePath(String fileName) async {
-    final directory = await getExternalStorageDirectory();
-    final scopedPath =
-        '${directory?.path ?? '/storage/emulated/0/Download'}/QuranMp3';
-    print("scope Path : $scopedPath");
-    // Create directory if it doesn't exist
-    final dir = Directory(scopedPath);
-    if (!dir.existsSync()) {
-      dir.createSync(recursive: true);
-    }
-
-    return '$scopedPath/$fileName';
-  }
-
-  // Function to download MP3
+  // Method to download MP3 for a Surah
   Future<void> downloadMp3(String url, String fileName) async {
+    setState(() {
+      isDownloading = true;
+      downloadProgress = 0.0;
+    });
+
     try {
-      setState(() {
-        isDownloading = true;
-        downloadProgress = 0.0;
-      });
+      Directory downloadsDir = Directory("/storage/emulated/0/Download");
+      if (!downloadsDir.existsSync()) {
+        throw Exception("Downloads directory not found.");
+      }
 
-      // Get file path
-      final filePath = await getScopedStoragePath(fileName);
-      print("Downloading to: $filePath");
-
-      // Download the file
-      await _dio.download(
+      String filePath = "${downloadsDir.path}/$fileName";
+      Dio dio = Dio();
+      await dio.download(
         url,
         filePath,
         onReceiveProgress: (received, total) {
           if (total != -1) {
             setState(() {
-              downloadProgress = received / total;
+              downloadProgress = (received / total);
             });
           }
         },
@@ -63,82 +44,36 @@ class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
 
       setState(() {
         isDownloading = false;
-        downloadedFilePath = filePath;
+        downloadProgress = 0.0;
       });
-
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Download completed! File saved at $filePath')),
-      );
     } catch (e) {
       setState(() {
         isDownloading = false;
       });
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error downloading file: $e')),
-      );
+      print("Download error: $e");
     }
   }
 
-  // Check if file exists
-  Future<bool> isFileDownloaded(String fileName) async {
-    final filePath = await getScopedStoragePath(fileName);
-    final file = File(filePath);
-    return file.existsSync();
+  // Method to play downloaded MP3
+  Future<void> playDownloadedMp3(String filePath) async {
+    await audioPlayer.play(DeviceFileSource(filePath));
+    setState(() {
+      isPlaying = true;
+    });
   }
 
-  // Play the downloaded MP3
-  Future<void> playDownloadedMp3() async {
-    if (downloadedFilePath == null) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('No file downloaded to play!')),
-      );
-      return;
-    }
-
-    try {
-      await _audioPlayer.play(DeviceFileSource(downloadedFilePath!));
-      setState(() {
-        isPlaying = true;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error playing audio: $e')),
-      );
-    }
-  }
-
-  // Pause audio
+  // Method to pause the audio
   Future<void> pauseAudio() async {
-    try {
-      await _audioPlayer.pause();
-      setState(() {
-        isPlaying = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error pausing audio: $e')),
-      );
-    }
+    await audioPlayer.pause();
+    setState(() {
+      isPlaying = false;
+    });
   }
 
-  // Stop audio
-  Future<void> stopAudio() async {
-    try {
-      await _audioPlayer.stop();
-      setState(() {
-        isPlaying = false;
-      });
-    } catch (e) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        SnackBar(content: Text('Error stopping audio: $e')),
-      );
-    }
-  }
-
-  @override
-  void dispose() {
-    _audioPlayer.dispose();
-    super.dispose();
+  // Check if the file is already downloaded
+  Future<bool> isFileDownloaded(String fileName) async {
+    String filePath = "/storage/emulated/0/Download/$fileName";
+    return await File(filePath).exists();
   }
 
   @override
@@ -151,7 +86,7 @@ class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
           int surahNumber = surahIndex + 1;
           String surahName = quran.getSurahName(surahNumber);
           int totalVerses = quran.getVerseCount(surahNumber);
-          String audioOfSurah = quran.getAudioURLBySurah(surahNumber);
+          String fileUrl = quran.getAudioURLBySurah(surahNumber);
           String fileName = 'surah_${surahNumber}.mp3';
 
           return Padding(
@@ -187,7 +122,8 @@ class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
                                   ),
                                   onPressed: isPlaying
                                       ? pauseAudio
-                                      : playDownloadedMp3,
+                                      : () => playDownloadedMp3(
+                                          "/storage/emulated/0/Download/$fileName"),
                                 ),
                               ],
                             );
@@ -197,22 +133,18 @@ class _AllSurahMp3ScopedState extends State<AllSurahMp3Scoped> {
                                 Icons.download_outlined,
                                 color: Colors.blueAccent,
                               ),
-                              onPressed: () =>
-                                  downloadMp3(audioOfSurah, fileName),
+                              onPressed: () => downloadMp3(fileUrl, fileName),
                             );
                           }
                         },
                       ),
                 title: Text(
                   '$surahName (${quran.getSurahNameArabic(surahNumber)})',
-                  style: GoogleFonts.amiriQuran(
-                    fontSize: 20,
-                    fontWeight: FontWeight.bold,
-                  ),
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
                 ),
                 subtitle: Text(
                   "Surah $surahName ($totalVerses Verses)",
-                  style: const TextStyle(fontSize: 14, color: Colors.grey),
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
                 ),
               ),
             ),

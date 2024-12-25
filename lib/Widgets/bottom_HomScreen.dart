@@ -104,17 +104,7 @@ class _MyHomePageState extends State<MyHomePage> {
                   ),
                   itemLabel: 'Tasbeeh',
                 ),
-                BottomBarItem(
-                  inActiveItem: Icon(
-                    Icons.add_circle_outline_sharp,
-                    color: Colors.blueGrey,
-                  ),
-                  activeItem: Icon(
-                    Icons.add_circle_outline_sharp,
-                    color: Colors.pink,
-                  ),
-                  itemLabel: 'Open',
-                ),
+
                 // BottomBarItem(
                 //   inActiveItem: Icon(
                 //     Icons.person,

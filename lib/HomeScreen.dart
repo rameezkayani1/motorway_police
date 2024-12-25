@@ -7,10 +7,16 @@ import 'package:jhijri/_src/_jHijri.dart';
 import 'package:jhijri/jHijri.dart';
 import 'package:adhan/adhan.dart';
 import 'package:geocoding/geocoding.dart';
+import 'package:motorway_police/Islamic.dart/Tasbeeh/TasbeehScreen.dart';
+import 'package:provider/provider.dart';
 import '../Ads Manager/bannerads.dart';
+import 'Ads Manager/insitialads.dart';
 import 'QuranPak/MainQuran.dart';
 import 'Audio/TabView.dart';
 import 'Islamic.dart/Qibal/compass.dart';
+import 'Testing/StorageTest.dart';
+import 'Testing/downloader.dart';
+import 'Widgets/assetsMusic.dart';
 import 'Widgets/currentlocation.dart';
 
 class HomeScreen extends StatefulWidget {
@@ -21,13 +27,14 @@ class HomeScreen extends StatefulWidget {
 }
 
 class _HomeScreenState extends State<HomeScreen> {
-  // final getad = CurrentLocationWidget();
   bool isplaying = false;
+  final InterstitialAdManager _interstitialAdManager = InterstitialAdManager();
+
   AudioPlayer player = AudioPlayer();
   Coordinates myCoordinates = Coordinates(24.8607, 67.0011);
   double? latitude;
   double? longitude; // Kushtia coordinates
-  String _locationMessage = "Updating location...";
+  String _locationMessage = "Updating..";
   String? latitudeA;
   String? longitudeA;
 
@@ -130,8 +137,43 @@ class _HomeScreenState extends State<HomeScreen> {
     }
   }
 
+  Map<String, String> _NowNextPrayerTimeAndName(PrayerTimes prayerTimes) {
+    DateTime now = DateTime.now();
+    if (now.isBefore(prayerTimes.sunrise)) {
+      return {'name': 'Fajr', 'time': DateFormat.jm().format(prayerTimes.fajr)};
+    } else if (now.isBefore(prayerTimes.asr)) {
+      return {
+        'name': 'Dhuhr',
+        'time': DateFormat.jm().format(prayerTimes.dhuhr)
+      };
+    } else if (now.isBefore(prayerTimes.maghrib)) {
+      return {'name': 'Asr', 'time': DateFormat.jm().format(prayerTimes.asr)};
+    } else if (now.isBefore(prayerTimes.maghrib)) {
+      return {
+        'name': 'Maghrib',
+        'time': DateFormat.jm().format(prayerTimes.maghrib)
+      };
+    } else if (now.isBefore(prayerTimes.fajr)) {
+      return {'name': 'Isha', 'time': DateFormat.jm().format(prayerTimes.isha)};
+    } else {
+      return {
+        'name': 'Fajr',
+        'time': DateFormat.jm().format(prayerTimes.fajr.add(Duration(days: 1)))
+      };
+    }
+  }
+
+  void didChangeDependencies() {
+    super.didChangeDependencies();
+    final audioProvider =
+        Provider.of<AudioPlayerProvider>(context, listen: false);
+    // Perform actions like preloading audio here
+  }
+
   @override
   Widget build(BuildContext context) {
+    final audioProvider = Provider.of<AudioPlayerProvider>(context);
+
     PrayerTimes prayerTimes = PrayerTimes.today(myCoordinates, params);
 
     Map<String, String> nextPrayer = _getNextPrayerTimeAndName(prayerTimes);
@@ -274,6 +316,7 @@ class _HomeScreenState extends State<HomeScreen> {
                                   Text(
                                     "Next Prayer Time",
                                     style: TextStyle(
+                                      fontWeight: FontWeight.bold,
                                       fontSize: 12,
                                       color: Colors.white.withOpacity(0.9),
                                     ),
@@ -318,7 +361,7 @@ class _HomeScreenState extends State<HomeScreen> {
                         ),
                         image: DecorationImage(
                           image: AssetImage(
-                              'assets/sak.PNG'), // Path to your image asset
+                              'assets/sak.png'), // Path to your image asset
                           fit: BoxFit.cover,
                           colorFilter: ColorFilter.mode(
                             Colors.black.withOpacity(0.2),
@@ -337,69 +380,167 @@ class _HomeScreenState extends State<HomeScreen> {
                       ),
 
                       child: Row(
-                        mainAxisAlignment: MainAxisAlignment.spaceAround,
+                        mainAxisAlignment: MainAxisAlignment.center,
                         children: [
                           Column(
                             mainAxisAlignment: MainAxisAlignment.center,
                             children: [
                               Text(
-                                "ٱلْكَوْثَر",
+                                'Playing: ${audioProvider.currentAudioName}',
                                 style: TextStyle(
-                                    fontSize: 35, color: Colors.white),
+                                    fontSize: 18, color: Colors.white),
                               ),
-                              ElevatedButton(
-                                onPressed: () async {
-                                  if (isplaying) {
-                                    await player.pause();
-                                  } else if (isplaying) {
-                                    await player.onPlayerComplete
-                                        .listen((event) {
-                                      setState(() {
-                                        isplaying = false;
-                                      });
-                                    });
-                                  } else {
-                                    await player.play(
-                                        AssetSource('Ayat/Al-Kauther.mp3'));
-                                  }
-                                  setState(() {
-                                    isplaying = !isplaying;
-                                  });
-                                },
-                                style: ElevatedButton.styleFrom(
-                                  backgroundColor: Colors.amber,
-                                  shape: CircleBorder(), // Circular shape
-                                  // padding: EdgeInsets.all(10), // Button padding
-                                ),
-                                child: Icon(
-                                  isplaying ? Icons.pause : Icons.play_circle,
-                                  size: 40,
-                                  color: Colors.white, // Icon color
-                                ),
+                              SizedBox(
+                                height: 10,
+                              ),
+                              Row(
+                                mainAxisAlignment: MainAxisAlignment.start,
+                                children: [
+                                  ElevatedButton(
+                                    onPressed: audioProvider.previousAudio,
+                                    // onPressed: () async {
+                                    //   if (isplaying) {
+                                    //     await player.pause();
+                                    //   } else if (isplaying) {
+                                    //     await player.onPlayerComplete
+                                    //         .listen((event) {
+                                    //       setState(() {
+                                    //         isplaying = false;
+                                    //       });
+                                    //     });
+                                    //   } else {
+                                    //     await player.play(
+                                    //         AssetSource('Ayat/Al-Kauther.mp3'));
+                                    //   }
+                                    //   setState(() {
+                                    //     isplaying = !isplaying;
+                                    //   });
+                                    // },
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: Size(
+                                        MediaQuery.of(context).size.width *
+                                            0.04, // 30% of screen width
+                                        MediaQuery.of(context).size.height *
+                                            0.04, // 7% of screen height
+                                      ),
+                                      backgroundColor: Colors.black,
+                                      shape: CircleBorder(), // Circular shape
+                                      // padding: EdgeInsets.all(10), // Button padding
+                                    ),
+                                    child: Icon(
+                                      isplaying
+                                          ? Icons.arrow_back_ios_new_outlined
+                                          : Icons.arrow_back_ios_new_rounded,
+                                      size: 25,
+                                      color: Colors.white, // Icon color
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: audioProvider.isPlaying
+                                        ? audioProvider.pauseAudio
+                                        : audioProvider.playAudio,
+                                    // onPressed: () async {
+                                    //   if (isplaying) {
+                                    //     await player.pause();
+                                    //   } else if (isplaying) {
+                                    //     await player.onPlayerComplete
+                                    //         .listen((event) {
+                                    //       setState(() {
+                                    //         isplaying = false;
+                                    //       });
+                                    //     });
+                                    //   } else {
+                                    //     await player.play(
+                                    //         AssetSource('Ayat/Al-Kauther.mp3'));
+                                    //   }
+                                    //   setState(() {
+                                    //     isplaying = !isplaying;
+                                    //   });
+                                    // },
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: Size(
+                                        MediaQuery.of(context).size.width *
+                                            0.06, // 30% of screen width
+                                        MediaQuery.of(context).size.height *
+                                            0.06, // 7% of screen height
+                                      ),
+                                      backgroundColor: Colors.black,
+                                      shape: CircleBorder(), // Circular shape
+                                      // padding: EdgeInsets.all(10), // Button padding
+                                    ),
+                                    child: Icon(
+                                      audioProvider.isPlaying
+                                          ? Icons.pause
+                                          : Icons.play_arrow,
+                                      color: Colors.white,
+                                    ),
+                                  ),
+                                  ElevatedButton(
+                                    onPressed: audioProvider.nextAudio,
+                                    // onPressed: () async {
+                                    //   if (isplaying) {
+                                    //     await player.pause();
+                                    //   } else if (isplaying) {
+                                    //     await player.onPlayerComplete
+                                    //         .listen((event) {
+                                    //       setState(() {
+                                    //         isplaying = false;
+                                    //       });
+                                    //     });
+                                    //   } else {
+                                    //     await player.play(
+                                    //         AssetSource('Ayat/Al-Kauther.mp3'));
+                                    //   }
+                                    //   setState(() {
+                                    //     isplaying = !isplaying;
+                                    //   });
+                                    // },
+                                    style: ElevatedButton.styleFrom(
+                                      minimumSize: Size(
+                                        MediaQuery.of(context).size.width *
+                                            0.04, // 30% of screen width
+                                        MediaQuery.of(context).size.height *
+                                            0.04, // 7% of screen height
+                                      ),
+                                      backgroundColor: Colors.black,
+                                      shape: CircleBorder(), // Circular shape
+                                      // padding: EdgeInsets.all(10), // Button padding
+                                    ),
+                                    child: Icon(
+                                      isplaying
+                                          ? Icons.arrow_forward_ios_outlined
+                                          : Icons.arrow_forward_ios_outlined,
+                                      size: 25,
+                                      color: Colors.white, // Icon color
+                                    ),
+                                  ),
+                                ],
                               )
                             ],
                           ),
                           Image.asset(
                             'assets/quran.png',
                             height: 150,
-                            // width: 70,
+                            width: MediaQuery.of(context).size.width * 3 / 10,
                             fit: BoxFit.cover,
                           ),
                         ],
                       ),
                     ),
-                    // SizedBox(
-                    //   child: AdWidget(
-                    //     ad: AdmobHelper.getBannerAd()..load(),
-                    //     key: UniqueKey(),
-                    //   ),
-                    //   height: 40,
-                    // ),
                     SizedBox(
-                      height: 10,
+                      height: 5,
+                    ),
+                    SizedBox(
+                      child: AdWidget(
+                        ad: AdmobHelper.getBannerAd()..load(),
+                        key: UniqueKey(),
+                      ),
+                      height: 40,
+                    ),
+                    SizedBox(
+                      height: 5,
                     ),
                     buildPrayerTimesRow(context),
-
                     Padding(
                       padding: const EdgeInsets.all(8.0),
                       child: Row(
@@ -422,362 +563,133 @@ class _HomeScreenState extends State<HomeScreen> {
                         ],
                       ),
                     ),
-                    Row(
-                      children: [
-                        Container(
-                          width: 100, // Set the width for each container
-                          padding: EdgeInsets.all(8),
-                          margin: EdgeInsets.symmetric(horizontal: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(25.0),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 2,
-                            ),
-                          ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.mosque_outlined,
-                                color: Colors.black,
-                                size: 30,
-                              ),
-                              Text(
-                                "Qibal",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                    SingleChildScrollView(
+                      scrollDirection: Axis.horizontal,
+                      child: Row(
+                        children: [
+                          InkWell(
+                            onTap: () {
+                              _interstitialAdManager.loadInterstitialAd();
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => QiblaCompass()),
+                              );
+                            },
+                            child: Container(
+                              width: 100, // Set the width for each container
+                              padding: EdgeInsets.all(8),
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 2,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 100, // Set the width for each container
-                          padding: EdgeInsets.all(8),
-                          margin: EdgeInsets.symmetric(horizontal: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(25.0),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 2,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.mosque_outlined,
+                                    color: Colors.black,
+                                    size: 30,
+                                  ),
+                                  Text(
+                                    "Qibal",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.menu_book_outlined,
-                                color: Colors.black,
-                                size: 30,
-                              ),
-                              Text(
-                                "Quran",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
+                          InkWell(
+                            onTap: () {
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) => MainQuranFile()),
+                              );
+                            },
+                            child: Container(
+                              width: 100, // Set the width for each container
+                              padding: EdgeInsets.all(8),
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 2,
                                 ),
                               ),
-                            ],
-                          ),
-                        ),
-                        Container(
-                          width: 100, // Set the width for each container
-                          padding: EdgeInsets.all(8),
-                          margin: EdgeInsets.symmetric(horizontal: 5),
-                          decoration: BoxDecoration(
-                            color: Colors.white,
-                            borderRadius: BorderRadius.circular(25.0),
-                            border: Border.all(
-                              color: Colors.grey,
-                              width: 2,
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.menu_book_outlined,
+                                    color: Colors.black,
+                                    size: 30,
+                                  ),
+                                  Text(
+                                    "Quran",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
+                                    ),
+                                  ),
+                                ],
+                              ),
                             ),
                           ),
-                          child: Column(
-                            mainAxisSize: MainAxisSize.min,
-                            children: [
-                              Icon(
-                                Icons.add_circle_outline,
-                                color: Colors.black,
-                                size: 30,
-                              ),
-                              Text(
-                                "Tasbeeh",
-                                style: TextStyle(
-                                  fontWeight: FontWeight.bold,
-                                  color: Colors.black,
-                                ),
-                              ),
-                            ],
-                          ),
-                        ),
-                      ],
-                    ),
-                    Column(
-                      mainAxisAlignment: MainAxisAlignment.start,
-                      children: [
-                        Container(
-                            child: Text(
-                          "Our Services",
-                          style: TextStyle(
-                              fontSize: 25, fontWeight: FontWeight.bold),
-                        )),
-                      ],
-                    ),
+                          InkWell(
+                            onTap: () {
+                              _interstitialAdManager.loadInterstitialAd();
 
-                    Row(
-                      mainAxisAlignment: MainAxisAlignment.spaceAround,
-                      children: [
-                        InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => QiblaCompass()),
-                            );
-                          },
-                          child: Container(
-                            height: 120, // Set a height
-                            width:
-                                120, // Make width the same as height for a perfect circle
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.green[200]!, Colors.blue[400]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
+                              Navigator.push(
+                                context,
+                                MaterialPageRoute(
+                                    builder: (context) =>
+                                        TasbeehCounterScreen()),
+                              );
+                            },
+                            child: Container(
+                              width: 100, // Set the width for each container
+                              padding: EdgeInsets.all(8),
+                              margin: EdgeInsets.symmetric(horizontal: 5),
+                              decoration: BoxDecoration(
+                                color: Colors.white,
+                                borderRadius: BorderRadius.circular(25.0),
+                                border: Border.all(
+                                  color: Colors.grey,
+                                  width: 2,
+                                ),
                               ),
-                              shape: BoxShape
-                                  .circle, // Make the container circular
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 5,
-                                  blurRadius: 7,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  height:
-                                      80, // Adjust the size of the inner circle if needed
-                                  width: 80,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      BoxShadow(
-                                        color: Colors.black.withOpacity(0.3),
-                                        spreadRadius: 2,
-                                        blurRadius: 8,
-                                        offset: Offset(0, 4),
-                                      ),
-                                    ],
+                              child: Column(
+                                mainAxisSize: MainAxisSize.min,
+                                children: [
+                                  Icon(
+                                    Icons.add_circle_outline,
+                                    color: Colors.black,
+                                    size: 30,
                                   ),
-                                  child: ClipOval(
-                                    child: Icon(
-                                      Icons.location_on,
-                                      size:
-                                          50, // Adjust icon size to fit the inner circle
-                                      color: Colors.white,
+                                  Text(
+                                    "Tasbeeh",
+                                    style: TextStyle(
+                                      fontWeight: FontWeight.bold,
+                                      color: Colors.black,
                                     ),
                                   ),
-                                ),
-                                Positioned(
-                                  bottom: 5, // Adjust position of text
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 15, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'Qibla',
-                                      style: TextStyle(
-                                        fontSize: 16, // Adjust font size
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            blurRadius: 5.0,
-                                            color: Colors.black45,
-                                            offset: Offset(2.0, 2.0),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
+                                ],
+                              ),
                             ),
                           ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            Navigator.push(
-                              context,
-                              MaterialPageRoute(
-                                  builder: (context) => MainQuranFile()),
-                            );
-                          },
-                          child: Container(
-                            // color: Colors.transparent,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.green[200]!, Colors.blue[400]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 5,
-                                  blurRadius: 7,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  // height: 20,
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      // BoxShadow(
-                                      //   color: Colors.black.withOpacity(0.3),
-                                      //   spreadRadius: 2,
-                                      //   blurRadius: 8,
-                                      //   offset: Offset(0, 4),
-                                      // ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                    child: Image.asset(
-                                      'assets/quran.png',
-                                      height: 100,
-                                      width: 100,
-                                    ),
-                                  ),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 25, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'Quran',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            blurRadius: 5.0,
-                                            color: Colors.black45,
-                                            offset: Offset(2.0, 2.0),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                        InkWell(
-                          onTap: () {
-                            // _showPrayerTimesModal(context);
-                          },
-                          child: Container(
-                            // color: Colors.transparent,
-                            height: 100,
-                            decoration: BoxDecoration(
-                              gradient: LinearGradient(
-                                colors: [Colors.green[200]!, Colors.blue[400]!],
-                                begin: Alignment.topLeft,
-                                end: Alignment.bottomRight,
-                              ),
-                              borderRadius: BorderRadius.circular(20),
-                              boxShadow: [
-                                BoxShadow(
-                                  color: Colors.grey.withOpacity(0.5),
-                                  spreadRadius: 5,
-                                  blurRadius: 7,
-                                  offset: Offset(0, 3),
-                                ),
-                              ],
-                            ),
-                            child: Stack(
-                              alignment: Alignment.center,
-                              children: [
-                                Container(
-                                  // height: 100,
-                                  width: 100,
-                                  decoration: BoxDecoration(
-                                    shape: BoxShape.circle,
-                                    boxShadow: [
-                                      // BoxShadow(
-                                      //   color: Colors.black.withOpacity(0.3),
-                                      //   spreadRadius: 2,
-                                      //   blurRadius: 8,
-                                      //   offset: Offset(0, 4),
-                                      // ),
-                                    ],
-                                  ),
-                                  child: ClipOval(
-                                      child: Icon(
-                                    Icons.timer_outlined,
-                                    size: 50,
-                                  )),
-                                ),
-                                Positioned(
-                                  bottom: 0,
-                                  right: 0,
-                                  child: Container(
-                                    padding: EdgeInsets.symmetric(
-                                        horizontal: 25, vertical: 5),
-                                    decoration: BoxDecoration(
-                                      color: Colors.transparent,
-                                      borderRadius: BorderRadius.circular(10),
-                                    ),
-                                    child: Text(
-                                      'Prayer',
-                                      style: TextStyle(
-                                        fontSize: 18,
-                                        color: Colors.white,
-                                        fontWeight: FontWeight.bold,
-                                        shadows: [
-                                          Shadow(
-                                            blurRadius: 5.0,
-                                            color: Colors.black45,
-                                            offset: Offset(2.0, 2.0),
-                                          ),
-                                        ],
-                                      ),
-                                    ),
-                                  ),
-                                ),
-                              ],
-                            ),
-                          ),
-                        ),
-                      ],
+                        ],
+                      ),
                     ),
                     Container()
                   ],
@@ -793,7 +705,7 @@ class _HomeScreenState extends State<HomeScreen> {
   Widget buildPrayerTimesRow(BuildContext context) {
     final prayerTimes = PrayerTimes.today(myCoordinates, params);
     final nextPrayer =
-        _getNextPrayerTimeAndName(prayerTimes); // Get the next prayer details
+        _NowNextPrayerTimeAndName(prayerTimes); // Get the next prayer details
 
     return Padding(
       padding: const EdgeInsets.all(0.0),

@@ -1,164 +1,157 @@
-// import 'dart:io';
-// import 'package:easy_localization/easy_localization.dart';
-// import 'package:file_utils/file_utils.dart';
-// import 'package:flutter/material.dart';
-// import 'package:flutter_pdfview/flutter_pdfview.dart';
-// import 'package:path/path.dart';
-// import 'package:path_provider/path_provider.dart';
-// import 'package:dio/dio.dart';
-// import 'package:permission_handler/permission_handler.dart';
-// import 'package:flutter/foundation.dart';
-// import 'package:path/path.dart' as path;
-// import 'package:http/http.dart' as http;
+import 'dart:io';
+import 'package:dio/dio.dart';
+import 'package:flutter/material.dart';
+import 'package:audioplayers/audioplayers.dart';
+import 'package:quran/quran.dart' as quran;
 
-// class OpenPDF extends StatefulWidget {
-//   final File file;
-//   final String url;
-//   final provider;
+class QuranScreen extends StatefulWidget {
+  @override
+  _QuranScreenState createState() => _QuranScreenState();
+}
 
-//   const OpenPDF(
-//       {Key? key, required this.file, required this.url, this.provider})
-//       : super(key: key);
+class _QuranScreenState extends State<QuranScreen> {
+  bool isDownloading = false;
+  double downloadProgress = 0.0;
+  bool isPlaying = false;
+  AudioPlayer audioPlayer = AudioPlayer();
 
-//   @override
-//   State<OpenPDF> createState() => _OpenPDFState();
-// }
+  // Method to download MP3 for a Surah
+  Future<void> downloadMp3(String url, String fileName) async {
+    setState(() {
+      isDownloading = true;
+      downloadProgress = 0.0;
+    });
 
-// class _OpenPDFState extends State<OpenPDF> {
-//   final GlobalKey<ScaffoldState> _scaffoldKey = GlobalKey<ScaffoldState>();
-//   bool downloading = false;
-//   var progress = "";
-//   var path = "No Data";
-//   var platformVersion = "Unknown";
-//   var _onPressed;
-//   Directory? externalDir;
+    try {
+      Directory downloadsDir = Directory("/storage/emulated/0/Download");
+      if (!downloadsDir.existsSync()) {
+        throw Exception("Downloads directory not found.");
+      }
 
-//   @override
-//   void initState() {
-//     super.initState();
-//   }
+      String filePath = "${downloadsDir.path}/$fileName";
+      Dio dio = Dio();
+      await dio.download(
+        url,
+        filePath,
+        onReceiveProgress: (received, total) {
+          if (total != -1) {
+            setState(() {
+              downloadProgress = (received / total);
+            });
+          }
+        },
+      );
 
-//   String convertCurrentDateTimeToString() {
-//     String formattedDateTime =
-//         DateFormat('yyyyMMdd_kkmmss').format(DateTime.now()).toString();
-//     return formattedDateTime;
-//   }
+      setState(() {
+        isDownloading = false;
+        downloadProgress = 0.0;
+      });
+    } catch (e) {
+      setState(() {
+        isDownloading = false;
+      });
+      print("Download error: $e");
+    }
+  }
 
-//   Future<void> downloadFile(BuildContext context) async {
-//     Dio dio = Dio();
+  // Method to play downloaded MP3
+  Future<void> playDownloadedMp3(String filePath) async {
+    await audioPlayer.play(DeviceFileSource(filePath));
+    setState(() {
+      isPlaying = true;
+    });
+  }
 
-//     final status = await Permission.storage.request();
-//     if (status.isGranted) {
-//       String dirloc = "";
-//       if (Platform.isAndroid) {
-//         dirloc = "/sdcard/download/NHB/";
-//       } else {
-//         dirloc = (await getApplicationDocumentsDirectory()).path;
-//       }
+  // Method to pause the audio
+  Future<void> pauseAudio() async {
+    await audioPlayer.pause();
+    setState(() {
+      isPlaying = false;
+    });
+  }
 
-//       try {
-//         FileUtils.mkdir([dirloc]);
-//         await dio.download(
-//             widget.url, dirloc + convertCurrentDateTimeToString() + ".pdf",
-//             onReceiveProgress: (receivedBytes, totalBytes) {
-//           print('here 1');
-//           setState(() {
-//             downloading = true;
-//             progress =
-//                 ((receivedBytes / totalBytes) * 100).toStringAsFixed(0) + "%";
-//             print(progress);
-//           });
-//           print('here 2');
-//         });
-//       } catch (e) {
-//         print('catch catch catch');
-//         print(e);
-//       }
+  // Check if the file is already downloaded
+  Future<bool> isFileDownloaded(String fileName) async {
+    String filePath = "/storage/emulated/0/Download/$fileName";
+    return await File(filePath).exists();
+  }
 
-//       setState(() {
-//         downloading = false;
-//         progress = "Download Completed.";
-//         path = dirloc + convertCurrentDateTimeToString() + ".pdf";
-//       });
-//       print(path);
-//       final snackBar = SnackBar(
-//         content: Text(
-//           "Download success at $path",
-//         ),
-//         duration: const Duration(seconds: 2),
-//         action: SnackBarAction(
-//           label: "Dismiss",
-//           textColor: Colors.red,
-//           onPressed: () {},
-//         ),
-//       );
-//       ScaffoldMessenger.of(context).showSnackBar(snackBar);
-//       // print('here give alert-->completed');
-//     } else {
-//       setState(() {
-//         progress = "Permission Denied!";
-//         _onPressed = () {
-//           downloadFile(context);
-//         };
-//       });
-//     }
-//   }
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      appBar: AppBar(title: Text("Quran Audio")),
+      body: ListView.builder(
+        padding: const EdgeInsets.all(8.0),
+        itemCount: quran.totalSurahCount,
+        itemBuilder: (context, surahIndex) {
+          int surahNumber = surahIndex + 1;
+          String surahName = quran.getSurahName(surahNumber);
+          int totalVerses = quran.getVerseCount(surahNumber);
+          String fileUrl = quran.getAudioURLBySurah(surahNumber);
+          String fileName = 'surah_${surahNumber}.mp3';
 
-//   @override
-//   Widget build(BuildContext context) {
-//     final name = basename(widget.file.path);
-//     return SafeArea(
-//       child: Scaffold(
-//         key: _scaffoldKey,
-//         floatingActionButton: FloatingActionButton(
-//           onPressed: () async {
-//             downloadFile(context);
-//             // await _storeFile(widget.url, "sample.pdf", context);
-//           },
-//           child: Icon(Icons.download),
-//         ),
-//         body: Column(
-//           children: [
-//             Expanded(
-//               child: PDFView(
-//                 filePath: widget.file.path,
-//               ),
-//             ),
-//           ],
-//         ),
-//       ),
-//     );
-//   }
+          return Padding(
+            padding: const EdgeInsets.symmetric(vertical: 5.0),
+            child: Card(
+              elevation: 5,
+              child: ListTile(
+                leading: CircleAvatar(
+                  backgroundColor: Colors.teal,
+                  child: Text(
+                    '$surahNumber',
+                    style: const TextStyle(color: Colors.white),
+                  ),
+                ),
+                trailing: isDownloading
+                    ? CircularProgressIndicator(value: downloadProgress)
+                    : FutureBuilder<bool>(
+                        future: isFileDownloaded(fileName),
+                        builder: (context, snapshot) {
+                          if (snapshot.connectionState ==
+                              ConnectionState.waiting) {
+                            return CircularProgressIndicator();
+                          }
 
-//   ///Download PDF
-//   Future<bool> _requestPermission(Permission permission) async {
-//     if (await permission.isGranted) {
-//       return true;
-//     } else {
-//       var result = await permission.request();
-//       if (result == PermissionStatus.granted) {
-//         return true;
-//       }
-//     }
-//     return false;
-//   }
-// }
-
-// class OpenPdfUtil {
-//   Future<File> loadPdfFromNetwork(String url) async {
-//     final response = await http.get(Uri.parse(url));
-//     final bytes = response.bodyBytes;
-//     return _storeFile(url, bytes);
-//   }
-
-//   Future<File> _storeFile(String url, List<int> bytes) async {
-//     final filename = path.basename(url);
-//     final dir = await getApplicationDocumentsDirectory();
-//     final file = File('${dir.path}/$filename');
-//     await file.writeAsBytes(bytes, flush: true);
-//     if (kDebugMode) {
-//       print('$file');
-//     }
-//     return file;
-//   }
-// }
+                          if (snapshot.hasData && snapshot.data == true) {
+                            return Row(
+                              mainAxisSize: MainAxisSize.min,
+                              children: [
+                                IconButton(
+                                  icon: Icon(
+                                    isPlaying ? Icons.pause : Icons.play_arrow,
+                                    color: Colors.blueAccent,
+                                  ),
+                                  onPressed: isPlaying
+                                      ? pauseAudio
+                                      : () => playDownloadedMp3(
+                                          "/storage/emulated/0/Download/$fileName"),
+                                ),
+                              ],
+                            );
+                          } else {
+                            return IconButton(
+                              icon: Icon(
+                                Icons.download_outlined,
+                                color: Colors.blueAccent,
+                              ),
+                              onPressed: () => downloadMp3(fileUrl, fileName),
+                            );
+                          }
+                        },
+                      ),
+                title: Text(
+                  '$surahName (${quran.getSurahNameArabic(surahNumber)})',
+                  style: TextStyle(fontSize: 20, fontWeight: FontWeight.bold),
+                ),
+                subtitle: Text(
+                  "Surah $surahName ($totalVerses Verses)",
+                  style: TextStyle(fontSize: 14, color: Colors.grey),
+                ),
+              ),
+            ),
+          );
+        },
+      ),
+    );
+  }
+}

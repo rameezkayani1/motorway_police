@@ -94,7 +94,7 @@ class _MainQuranFileState extends State<MainQuranFile> {
                   physics: const BouncingScrollPhysics(),
                   children: [
                     FullQuranView(),
-                    AllSurahMp3Scoped(),
+                    OfflineSurahs(),
                     AllSurahMp3(),
                     // AllSurahMp322(),
                   ],
